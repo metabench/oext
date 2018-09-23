@@ -140,7 +140,7 @@ const field = (...a) => {
 
                 if (def(default_value)) {
                     // could have a spec object.
-                    obj._[prop_name] = default_value;
+                    (obj._ = obj._ || {})[prop_name] = default_value;
                 }
             }
         }
