@@ -4,16 +4,15 @@
 // Validate and transform in one function?
 //  Throws an exception then it's a validation error.
 
-const lang = require('lang-mini');
 const {
     each,
     get_a_sig,
     def
-} = lang;
+} = require('lang-mini');
 
 const ifn = item => typeof item === 'function';
 const ia = lang.is_array;
-//const prop = (obj, prop_name, default_value, fn_validate_transform) => {
+//const prop = (obj, prop_name, default_value, fn_transform) => {
 
 // Raising change events or not.
 
@@ -70,38 +69,36 @@ const field = (...a) => {
                 let objs = a.shift();
                 each(objs, obj => {
                     prop.apply(this, [obj].concat(item_params));
-                })
-
-
+                });
             } else {
                 // normal operation.
                 // single object.
 
                 // no default value?
-                let obj, prop_name, default_value, fn_validate_transform;
+                let obj, prop_name, default_value, fn_transform;
                 if (a.length === 2) {
                     [obj, prop_name] = a;
-                    //[obj, prop_name, default_value, fn_validate_transform] = a;
+                    //[obj, prop_name, default_value, fn_transform] = a;
                 }
 
                 if (a.length === 3) {
                     if (ifn(a[2])) {
-                        [obj, prop_name, fn_validate_transform] = a;
+                        [obj, prop_name, fn_transform] = a;
                     } else {
                         [obj, prop_name, default_value] = a;
                     }
-                    //[obj, prop_name, default_value, fn_validate_transform] = a;
+                    //[obj, prop_name, default_value, fn_transform] = a;
                 }
                 if (a.length === 4) {
-                    [obj, prop_name, default_value, fn_validate_transform] = a;
+                    [obj, prop_name, default_value, fn_transform] = a;
                 }
 
-                //let [obj, prop_name, default_value, fn_validate_transform] = a;
+                //let [obj, prop_name, default_value, fn_transform] = a;
 
                 //let _prop_value = default_value;
                 Object.defineProperty(obj, prop_name, {
                     get() {
-                        
+
                         if (def(obj._)) {
                             return obj._[prop_name];
                         } else {
@@ -117,9 +114,9 @@ const field = (...a) => {
                         // value must be an array of length 2.
                         let _value;
 
-                        if (fn_validate_transform) {
+                        if (fn_transform) {
                             //try {
-                            _value = fn_validate_transform(value)
+                            _value = fn_transform(value)
                             //} catch (err) {
                             //    throw err;
                             //}
@@ -147,6 +144,7 @@ const field = (...a) => {
     }
 }
 
+
 const prop = (...a) => {
     // ...args?
     let s = get_a_sig(a);
@@ -159,59 +157,106 @@ const prop = (...a) => {
         if (a.length > 2) {
             if (ia(a[0])) {
                 // the rest of the properties applied to the array of items.
-
+                throw 'stop';
                 let objs = a.shift();
                 each(objs, obj => {
-                    prop.apply(this, [obj].concat(item_params));
+                    prop.apply(this, [obj].concat(item_params)); // bug
                 });
-
             } else {
                 // normal operation.
                 // single object.
-
                 // no default value?
-                let obj, prop_name, default_value, fn_validate_transform;
+                // fn_onchange
+
+                // just a transform function really.
+                //  could have validation too.
+                let obj, prop_name, default_value, fn_onchange, fn_transform, options;
+
+                const load_options = (options) => {
+                    prop_name = prop_name || options.name || options.prop_name;
+                    fn_onchange = options.fn_onchange || options.onchange || options.change;
+                    fn_transform = options.fn_transform || options.ontransform || options.transform;
+                }
+                if (a.length === 2) {
+                    [obj, options] = a;
+                    load_options(options);
+                    //[obj, prop_name, default_value, fn_transform] = a;
+                }
 
                 if (a.length === 3) {
                     if (ifn(a[2])) {
-                        [obj, prop_name, fn_validate_transform] = a;
+                        //[obj, prop_name, fn_transform] = a;
+                        [obj, prop_name, fn_onchange] = a;
                     } else {
                         [obj, prop_name, default_value] = a;
                     }
-                    //[obj, prop_name, default_value, fn_validate_transform] = a;
+                    //[obj, prop_name, default_value, fn_transform] = a;
                 }
                 if (a.length === 4) {
-                    [obj, prop_name, default_value, fn_validate_transform] = a;
+                    
+                    // onchange optional function too.
+
+                    // get_a_sig would help here.
+
+
+                    if (ifn(a[2]) && ifn(a[3])) {
+                        // transform, onchange
+                        [obj, prop_name, fn_transform, fn_onchange] = a;
+
+                    } else if (ifn(a[3])) {
+                        //[obj, prop_name, fn_transform] = a;
+                        [obj, prop_name, default_value, fn_onchange] = a;
+                    } else {
+                        [obj, prop_name, default_value, options] = a;
+                        load_options(options);
+                    }
+                }
+                if (a.length === 5) {
+                    // onchange optional function too.
+                    [obj, prop_name, default_value, fn_transform, fn_onchange] = a;
+                }
+                //let [obj, prop_name, default_value, fn_transform] = a;
+
+                //let _prop_value = default_value;
+                //console.log('!!fn_onchange', !!fn_onchange);
+
+                let _prop_value;
+                const _set = (value) => {
+                    let _value;
+                    if (fn_transform) {
+                        //try {
+                        // Validation could throw an error
+                        // rectify function?
+                        _value = fn_transform(value);
+                        //} catch (err) {
+                        //    throw err;
+                        //}
+                    } else {
+                        _value = value;
+                    }
+                    let old = _prop_value;
+                    _prop_value = _value;
+                    if (fn_onchange) {
+                        fn_onchange([_prop_value, old]);
+                    }
+                    obj.raise('change', {
+                        'name': prop_name,
+                        'old': old,
+                        'value': _prop_value
+                    });
                 }
 
-                //let [obj, prop_name, default_value, fn_validate_transform] = a;
+                if (def(default_value)) {
+                    _set(default_value);
+                }
 
-                let _prop_value = default_value;
                 Object.defineProperty(obj, prop_name, {
                     get() {
                         return _prop_value;
                     },
                     set(value) {
+                        _set(value);
                         // value must be an array of length 2.
-                        let _value;
-
-                        if (fn_validate_transform) {
-                            //try {
-                            _value = fn_validate_transform(value)
-                            //} catch (err) {
-                            //    throw err;
-                            //}
-                        } else {
-                            _value = value;
-                        }
-                        let old = _prop_value;
-                        _prop_value = _value;
-
-                        obj.raise('change', {
-                            'name': name,
-                            'old': old,
-                            'value': _prop_value
-                        });
 
                         /*
                         if (fn_validate) {
@@ -250,9 +295,9 @@ const prop = (...a) => {
         '[?,s,?,f]': {}
     }
 
-    let fn_validate_transform;
+    let fn_transform;
     let [obj, prop_name, default_value] = a;
-    if (a.length === 4 && ifn(a[3])) fn_validate_transform = a[3];
+    if (a.length === 4 && ifn(a[3])) fn_transform = a[3];
     */
 
     // if the prop name is an array.
@@ -263,6 +308,21 @@ const prop = (...a) => {
 
 
 }
+
+
+// tprop
+//  has a validation function that checks against a type.
+/*
+const tprop = (...a) => {
+    // ...args?
+    let s = get_a_sig(a);
+    // [obj, prop_name, fn_transform]
+
+    // object, 
+
+}
+*/
+
 
 // and a field function as well.
 //  field would have extra meaning on a Control.
