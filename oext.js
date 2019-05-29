@@ -7,11 +7,12 @@
 const {
     each,
     get_a_sig,
-    def
+    def,
+    is_array
 } = require('lang-mini');
 
 const ifn = item => typeof item === 'function';
-const ia = lang.is_array;
+const ia = is_array;
 //const prop = (obj, prop_name, default_value, fn_transform) => {
 
 // Raising change events or not.
@@ -47,8 +48,22 @@ const ia = lang.is_array;
 //  dba database annotation in object (on static object)
 //  kv_fields 
 
-// add the db field data 
 
+const states = (obj, states) => {
+
+
+    // set the states
+
+    // set / get the state by name
+
+    // set / get the states by index
+
+    // alternate / toggle between states
+
+}
+
+
+// add the db field data 
 
 const field = (...a) => {
 
@@ -92,8 +107,9 @@ const field = (...a) => {
                 if (a.length === 4) {
                     [obj, prop_name, default_value, fn_transform] = a;
                 }
-
                 //let [obj, prop_name, default_value, fn_transform] = a;
+
+                
 
                 //let _prop_value = default_value;
                 Object.defineProperty(obj, prop_name, {
@@ -135,6 +151,10 @@ const field = (...a) => {
                     }
                 });
 
+                //obj.silent = (name, value) => {
+                //    
+                //}
+
                 if (def(default_value)) {
                     // could have a spec object.
                     (obj._ = obj._ || {})[prop_name] = default_value;
@@ -144,6 +164,13 @@ const field = (...a) => {
     }
 }
 
+const read_only = (obj, prop_name, fn_get) => {
+    Object.defineProperty(obj, prop_name, {
+        get() {
+            return fn_get();
+        }
+    });
+}
 
 const prop = (...a) => {
     // ...args?
@@ -303,10 +330,6 @@ const prop = (...a) => {
     // if the prop name is an array.
 
     // if we get a single array teh run that array.
-
-
-
-
 }
 
 
