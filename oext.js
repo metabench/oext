@@ -354,6 +354,7 @@ module.exports = function() {
           let obj, prop_name, default_value, fn_onchange, fn_transform, fn_on_ready, options;
   
           const load_options = options => {
+            console.log('options', options);
             prop_name = prop_name || options.name || options.prop_name;
             fn_onchange =
               options.fn_onchange || options.onchange || options.change;
@@ -361,6 +362,8 @@ module.exports = function() {
               options.fn_transform || options.ontransform || options.transform;
             fn_on_ready = options.ready || options.on_ready;
             default_value = default_value || options.default_value || options.default;
+
+            console.log('fn_on_ready', fn_on_ready);
 
           };
           if (a.length === 2) {
@@ -456,6 +459,8 @@ module.exports = function() {
             let old = _prop_value;
             console.log('old', old);
             _prop_value = _value;
+
+
             if (fn_onchange) {
 
               //fn_onchange([_prop_value, old]);
@@ -474,9 +479,15 @@ module.exports = function() {
             }
           };
   
+          /*
           if (def(default_value)) {
             _set(default_value);
           }
+          */
+
+         if (def(default_value)) {
+          _prop_value = default_value;
+        }
   
           const t_prop_name = tf(prop_name);
   
@@ -510,6 +521,8 @@ module.exports = function() {
           } else {
             throw 'Unexpected name type: ' + t_prop_name;
           }
+
+          console.log('!!fn_on_ready', !!fn_on_ready);
 
           if (fn_on_ready) {
             fn_on_ready({
