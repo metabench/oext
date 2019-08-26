@@ -347,6 +347,8 @@ module.exports = function() {
 
           // Try getting
 
+          console.log('oext prop a.length', a.length);
+
 
 
           let obj, prop_name, default_value, fn_onchange, fn_transform, fn_on_ready, options;
@@ -358,6 +360,8 @@ module.exports = function() {
             fn_transform =
               options.fn_transform || options.ontransform || options.transform;
             fn_on_ready = options.ready || options.on_ready;
+            default_value = default_value || options.default_value || options.default;
+
           };
           if (a.length === 2) {
             [obj, options] = a;
@@ -370,7 +374,22 @@ module.exports = function() {
               //[obj, prop_name, fn_transform] = a;
               [obj, prop_name, fn_onchange] = a;
             } else {
-              [obj, prop_name, default_value] = a;
+
+              //console.log('not ifn a[2]. could it be an options object?');
+              // could duck type to see if it's got functions attached.
+
+              //console.log('a[2]', a[2]);
+
+              // default, change, ready.
+              //  those are the options that the options object could contain.
+              if (a[2].change || a[2].ready) {
+                // thats the options object.
+                load_options(a[2]);
+
+                [obj, prop_name] = a;
+              } else {
+                [obj, prop_name, default_value] = a;
+              }
             }
             //[obj, prop_name, default_value, fn_transform] = a;
           }
@@ -393,15 +412,14 @@ module.exports = function() {
             [obj, prop_name, default_value, fn_transform, fn_onchange] = a;
           }
           //let [obj, prop_name, default_value, fn_transform] = a;
-  
           //let _prop_value = default_value;
           //console.log('!!fn_onchange', !!fn_onchange);
   
           // if the name is given as an array...?
           let _prop_value;
 
+          if (typeof default_value !== 'undefined') _prop_value = default_value;
           // And a silent set function that does not raise the change event.
-
           const _silent_set = value => {
             let _value;
             if (fn_transform) {
@@ -415,17 +433,14 @@ module.exports = function() {
             } else {
               _value = value;
             }
-
             _prop_value = _value;
-
           }
 
+          // Should have been set already?
   
           const _set = value => {
             let _value;
             //const raise_change_events = true;
-            
-
 
             if (fn_transform) {
               //try {
@@ -439,9 +454,16 @@ module.exports = function() {
               _value = value;
             }
             let old = _prop_value;
+            console.log('old', old);
             _prop_value = _value;
             if (fn_onchange) {
-              fn_onchange([_prop_value, old]);
+
+              //fn_onchange([_prop_value, old]);
+              fn_onchange({
+                old: old,
+                value: _prop_value
+              });
+
             }
             if (obj.raise && opts.raise_change_events) {
               obj.raise("change", {
