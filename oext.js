@@ -200,6 +200,32 @@ module.exports = function() {
       }
     }
   };
+
+
+  const get_set = (obj, prop_name, fn_get, fn_set) => {
+    const def = {
+      // Using shorthand method names (ES2015 feature).
+      // This is equivalent to:
+      // get: function() { return bValue; },
+      // set: function(newValue) { bValue = newValue; },
+      get: fn_get,
+      set: fn_set,
+      enumerable: true,
+      configurable: false
+    }
+
+    const t_prop_name = tf(prop_name);
+    if (t_prop_name === 'a') {
+      each(prop_name, name => Object.defineProperty(obj, name, def));
+    } else if (t_prop_name === 's') {
+      Object.defineProperty(obj, prop_name, def);
+    } else {
+      console.trace();
+      throw 'Unexpected prop_name, must be array or string';
+    }
+
+
+  }
   
   //
   
@@ -347,14 +373,14 @@ module.exports = function() {
 
           // Try getting
 
-          console.log('oext prop a.length', a.length);
+          //console.log('oext prop a.length', a.length);
 
 
 
           let obj, prop_name, default_value, fn_onchange, fn_transform, fn_on_ready, options;
   
           const load_options = options => {
-            console.log('options', options);
+            //console.log('options', options);
             prop_name = prop_name || options.name || options.prop_name;
             fn_onchange =
               options.fn_onchange || options.onchange || options.change;
@@ -363,7 +389,7 @@ module.exports = function() {
             fn_on_ready = options.ready || options.on_ready;
             default_value = default_value || options.default_value || options.default;
 
-            console.log('fn_on_ready', fn_on_ready);
+            //console.log('fn_on_ready', fn_on_ready);
 
           };
           if (a.length === 2) {
@@ -457,7 +483,7 @@ module.exports = function() {
               _value = value;
             }
             let old = _prop_value;
-            console.log('old', old);
+            //console.log('old', old);
             _prop_value = _value;
 
 
@@ -522,7 +548,7 @@ module.exports = function() {
             throw 'Unexpected name type: ' + t_prop_name;
           }
 
-          console.log('!!fn_on_ready', !!fn_on_ready);
+          //console.log('!!fn_on_ready', !!fn_on_ready);
 
           if (fn_on_ready) {
             fn_on_ready({
@@ -539,7 +565,9 @@ module.exports = function() {
     prop: prop,
     field: field,
     read_only: read_only,
-    ro: read_only
+    ro: read_only,
+    get_set: get_set,
+    gs: get_set
   };
 
 };
