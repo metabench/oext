@@ -275,7 +275,7 @@ const get_instance = function () {
 		// ...args?
 		let s = get_a_sig(a);
 
-		console.log('prop sig', s);
+		//console.log('prop sig', s);
 
 		// Need to read the params.
 		//  Maybe could use a new param reading specific function?
@@ -438,12 +438,12 @@ const get_instance = function () {
 					}
 					if (a.length === 4) {
 
-						console.log('a length 4');
+						//console.log('a length 4');
 						// onchange optional function too.
 						// get_a_sig would help here.
 						if (ifn(a[2]) && ifn(a[3])) {
 							// transform, onchange
-							console.log('2 and 3 are functions');
+							//console.log('2 and 3 are functions');
 
 							// Transformation of input value
 							// Response to change
