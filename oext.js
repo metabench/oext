@@ -129,10 +129,10 @@ const get_instance = function () {
 
 					let raise_change_events = opts.raise_change_events;
 
-					const t_raise = tf(obj.raise);
-					if (t_raise !== 'f') {
-						raise_change_events = false;
-					}
+					//const t_raise = tf(obj.raise);
+					//if (t_raise !== 'f') {
+					//	raise_change_events = false;
+					//}
 
 					// If obj does not have a .raise function, we can't raise the event anyway.
 
@@ -153,60 +153,66 @@ const get_instance = function () {
 					if (a.length === 4) {
 						[obj, prop_name, default_value, fn_transform] = a;
 					}
+
+					if (obj !== undefined) {
+						Object.defineProperty(obj, prop_name, {
+							get() {
+								if (def(obj._)) {
+									return obj._[prop_name];
+								} else {
+									return undefined;
+								}
+								//return _prop_value;
+							},
+							set(value) {
+								//console.log('setting prop: ' + prop_name);
+								let old = (obj._ = obj._ || {})[prop_name];
+								// value must be an array of length 2.
+								let _value;
+								if (fn_transform) {
+									//try {
+									_value = fn_transform(value);
+									//} catch (err) {
+									//    throw err;
+									//}
+								} else {
+									_value = value;
+								}
+								obj._[prop_name] = _value;
+								//let old = _prop_value;
+								//_prop_value = _value;
+	
+								// Seems not to be set up to do this on client-side controls?
+								//   conflicts with dom change?
+								//    want to listen to the event from non-dom sources too. Should be OK.
+								//    Shouldn't only be attached on DOM listeners.
+								//    Need to ensure the fields get set up on activation.
+	
+								if (raise_change_events) {
+									obj.raise("change", {
+										name: prop_name,
+										old: old,
+										value: _value
+									});
+								}
+	
+	
+							}
+						});
+						//obj.silent = (name, value) => {
+						//
+						//}
+						if (def(default_value)) {
+							// could have a spec object.
+							(obj._ = obj._ || {})[prop_name] = default_value;
+						}
+					} else {
+						throw 'stop';
+					}
 					//let [obj, prop_name, default_value, fn_transform] = a;
 
 					//let _prop_value = default_value;
-					Object.defineProperty(obj, prop_name, {
-						get() {
-							if (def(obj._)) {
-								return obj._[prop_name];
-							} else {
-								return undefined;
-							}
-							//return _prop_value;
-						},
-						set(value) {
-							//console.log('setting prop: ' + prop_name);
-							let old = (obj._ = obj._ || {})[prop_name];
-							// value must be an array of length 2.
-							let _value;
-							if (fn_transform) {
-								//try {
-								_value = fn_transform(value);
-								//} catch (err) {
-								//    throw err;
-								//}
-							} else {
-								_value = value;
-							}
-							obj._[prop_name] = _value;
-							//let old = _prop_value;
-							//_prop_value = _value;
-
-							// Seems not to be set up to do this on client-side controls?
-							//   conflicts with dom change?
-							//    want to listen to the event from non-dom sources too. Should be OK.
-							//    Shouldn't only be attached on DOM listeners.
-							//    Need to ensure the fields get set up on activation.
-
-							if (raise_change_events) {
-								obj.raise("change", {
-									name: prop_name,
-									old: old,
-									value: _value
-								});
-							}
-
-
-						}
-					});
-					//obj.silent = (name, value) => {
-					//
-					//}
-					if (def(default_value)) {
-						// could have a spec object.
-						(obj._ = obj._ || {})[prop_name] = default_value;
-					}
+					
 				}
 			}
 		}
