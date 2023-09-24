@@ -3,7 +3,7 @@
     "main": "oext.js",
     "license": "MIT",
     "dependencies": {
-        "lang-mini": "^0.0.26"
+        "lang-mini": "^0.0.31"
     },
     "engines": {
         "node": ">=12.0.0"
@@ -14,5 +14,5 @@
         "type": "git",
         "url": "https://github.com/metabench/oext.git"
     },
-    "version": "0.0.24"
+    "version": "0.0.25"
 }
