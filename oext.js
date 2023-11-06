@@ -6,6 +6,10 @@
 // Validate and transform in one function?
 //  Throws an exception then it's a validation error.
 
+// Relatively simple and powerful functionality here.
+//   Could put within lang-mini????
+
+
 const {
 	each,
 	get_a_sig,
@@ -40,82 +44,22 @@ const get_instance = function () {
 
 	// uses ._[name]
 
-	// Should make the prop_name work as an array for aliases.
-	const field = (...a) => {
-		let s = get_a_sig(a);
-		if (s === "[a]") {
-			each(a[0], item_params => {
-				prop.apply(this, item_params);
-			});
-		} else {
-			if (a.length > 1) {
-				if (ia(a[0])) {
-					// the rest of the properties applied to the array of items.
-					let objs = a.shift();
-					each(objs, obj => {
-						prop.apply(this, [obj].concat(item_params));
-					});
-				} else {
-					let obj, prop_name, default_value, fn_transform;
-					let raise_change_events = opts.raise_change_events;
-					if (a.length === 2) {
-						[obj, prop_name] = a;
-					}
-					if (a.length === 3) {
-						if (ifn(a[2])) {
-							[obj, prop_name, fn_transform] = a;
-						} else {
-							[obj, prop_name, default_value] = a;
-						}
-					}
-					if (a.length === 4) {
-						[obj, prop_name, default_value, fn_transform] = a;
-					}
+	// Maybe move field to lang-mini.
+	//   Maybe want to be able to apply 
 
-					if (obj !== undefined) {
-						Object.defineProperty(obj, prop_name, {
-							get() {
-								if (def(obj._)) {
-									return obj._[prop_name];
-								} else {
-									return undefined;
-								}
-								//return _prop_value;
-							},
-							set(value) {
-								//console.log('setting prop: ' + prop_name);
-								let old = (obj._ = obj._ || {})[prop_name];
-								// value must be an array of length 2.
-								let _value;
-								if (fn_transform) {
-									//try {
-									_value = fn_transform(value);
-									//} catch (err) {
-									//    throw err;
-									//}
-								} else {
-									_value = value;
-								}
-								obj._[prop_name] = _value;
-								if (raise_change_events) {
-									obj.raise("change", {
-										name: prop_name,
-										old: old,
-										value: _value
-									});
-								}
-							}
-						});
-						if (def(default_value)) {
-							(obj._ = obj._ || {})[prop_name] = default_value;
-						}
-					} else {
-						throw 'stop';
-					}
-				}
-			}
-		}
-	};
+
+	// Should make the prop_name work as an array for aliases.
+
+	// But field makes use of 'prop'.
+	//   Moving this entirely to lang-mini may help. Then in lang-mini can integrate it with data type and grammar.
+
+
+	// Field has a nicer / simpler API than prop it seems, but it internally makes use of prop.
+	//   May look further into using prop....
+
+	// raise_change_events being an option....?
+
+	
 
 
 	const get_set = (obj, prop_name, fn_get, fn_set) => {
@@ -162,6 +106,20 @@ const get_instance = function () {
 		});
 	};
 
+
+	// prop is a bit like field. Somewhat more complicated. Not sure how much it gets used in jsgui3 or other code.
+	//   Maybe change / improve it.
+	//     Seems like very large overlap with 'field', could introduce more capabilities like tranformation functions.
+	//   field.validator = 
+	//   field.input_transformer = 
+	//   field.input.transformer = ...
+	//   field.input.validator = ....
+
+	// field.security = ....?
+	//   which users have access? which components in the webapp have access?
+
+
+
 	const prop = (...a) => {
 		// ...args?
 		let s = get_a_sig(a);
@@ -188,9 +146,7 @@ const get_instance = function () {
 						throw "NYI 468732b";
 					}
 				}
-			}
-
-			if (a.length > 2) {
+			} else if (a.length > 2) {
 				if (ia(a[0])) {
 					// the rest of the properties applied to the array of items.
 					throw "stop";
@@ -212,9 +168,7 @@ const get_instance = function () {
 					if (a.length === 2) {
 						[obj, options] = a;
 						load_options(options);
-					}
-
-					if (a.length === 3) {
+					} else if (a.length === 3) {
 						if (ifn(a[2])) {
 							[obj, prop_name, fn_onchange] = a;
 						} else {
@@ -227,8 +181,7 @@ const get_instance = function () {
 							}
 						}
 						//[obj, prop_name, default_value, fn_transform] = a;
-					}
-					if (a.length === 4) {
+					} else if (a.length === 4) {
 						if (ifn(a[2]) && ifn(a[3])) {
 							[obj, prop_name, fn_transform, fn_onchange] = a;
 						} else if (ifn(a[3])) {
@@ -237,8 +190,7 @@ const get_instance = function () {
 							[obj, prop_name, default_value, options] = a;
 							load_options(options);
 						}
-					}
-					if (a.length === 5) {
+					} else if (a.length === 5) {
 						[obj, prop_name, default_value, fn_transform, fn_onchange] = a;
 					}
 					let _prop_value;
@@ -315,6 +267,88 @@ const get_instance = function () {
 						fn_on_ready({
 							silent_set: _silent_set
 						})
+					}
+				}
+			}
+		}
+	};
+
+	const field = (...a) => {
+
+		// Uses obj._
+		//   Seems quite simple, powerful, flexible.
+		//     However, would like a different way of doing it too, could use a local variable defined within the 'field' function.
+
+
+
+		let s = get_a_sig(a);
+		if (s === "[a]") {
+			// prop????
+			each(a[0], item_params => {
+				prop.apply(this, item_params);
+			});
+		} else {
+			if (a.length > 1) {
+				if (ia(a[0])) {
+					// the rest of the properties applied to the array of items.
+					let objs = a.shift();
+					each(objs, obj => {
+						prop.apply(this, [obj].concat(item_params));
+					});
+				} else {
+					let obj, prop_name, default_value, fn_transform;
+					let raise_change_events = opts.raise_change_events;
+					if (a.length === 2) {
+						[obj, prop_name] = a;
+					} else if (a.length === 3) {
+						if (ifn(a[2])) {
+							[obj, prop_name, fn_transform] = a;
+						} else {
+							[obj, prop_name, default_value] = a;
+						}
+					} else if (a.length === 4) {
+						[obj, prop_name, default_value, fn_transform] = a;
+					}
+
+					if (obj !== undefined) {
+						Object.defineProperty(obj, prop_name, {
+							get() {
+								if (def(obj._)) {
+									return obj._[prop_name];
+								} else {
+									return undefined;
+								}
+								//return _prop_value;
+							},
+							set(value) {
+								//console.log('setting prop: ' + prop_name);
+								let old = (obj._ = obj._ || {})[prop_name];
+								// value must be an array of length 2.
+								let _value;
+								if (fn_transform) {
+									//try {
+									_value = fn_transform(value);
+									//} catch (err) {
+									//    throw err;
+									//}
+								} else {
+									_value = value;
+								}
+								obj._[prop_name] = _value;
+								if (raise_change_events) {
+									obj.raise("change", {
+										name: prop_name,
+										old: old,
+										value: _value
+									});
+								}
+							}
+						});
+						if (def(default_value)) {
+							(obj._ = obj._ || {})[prop_name] = default_value;
+						}
+					} else {
+						throw 'stop';
 					}
 				}
 			}
