@@ -172,7 +172,8 @@ const get_instance = function () {
 						if (ifn(a[2])) {
 							[obj, prop_name, fn_onchange] = a;
 						} else {
-							if (a[2].change || a[2].ready) {
+
+							if (a[2] !== undefined && (a[2].change || a[2].ready)) {
 								load_options(a[2]);
 
 								[obj, prop_name] = a;
